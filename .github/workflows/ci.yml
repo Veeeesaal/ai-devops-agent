@@ -22,6 +22,6 @@ jobs:
         run: |
           pip install -r backend/requirements.txt
 
-      - name: Run Test (Simulate Error ❌)
+      - name: Run Test (Simulate Error )
         run: |
           python backend/test_fail.py

@@ -2,94 +2,228 @@ import React from "react";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { atomDark } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { CheckCircle2, Copy, Sparkles, Terminal } from "lucide-react";
+
+import {
+  CheckCircle2,
+  Copy,
+  Terminal,
+  Activity,
+  Wrench,
+  ShieldCheck,
+  Zap,
+  Monitor,
+} from "lucide-react";
+
 import { motion } from "framer-motion";
 
 const ResultPanel = ({ result }) => {
   if (!result) return null;
 
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(result.analysis);
-    alert("Solution copied to clipboard!");
+  //  Parse Result
+  let parsedResult =
+    typeof result === "object"
+      ? { ...result }
+      : { analysis: result };
+
+  const formatText = (data) => {
+    if (!data) return "";
+
+    if (typeof data === "object") {
+      return JSON.stringify(data, null, 2);
+    }
+
+    return String(data).replace(/\\n/g, "\n");
   };
 
+  //  Copy Full Report
+  const copyToClipboard = () => {
+    const textToCopy = `
+Analysis:
+${formatText(parsedResult.analysis)}
+
+Fix:
+${formatText(parsedResult.fix)}
+
+Validation:
+${formatText(parsedResult.validation)}
+`;
+
+    navigator.clipboard.writeText(textToCopy);
+
+    alert("Report copied to clipboard!");
+  };
+
+  //  Markdown Renderer
+  const MarkdownComponent = ({ content }) => (
+    <ReactMarkdown
+      components={{
+        code({ inline, className, children, ...props }) {
+          const match = /language-(\w+)/.exec(className || "");
+
+          return !inline && match ? (
+            <div className="relative my-4 rounded-xl overflow-hidden border border-slate-700 shadow-xl">
+              
+              <div className="bg-slate-800 px-4 py-2 flex items-center justify-between border-b border-slate-700">
+                <span className="text-[10px] uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                  <Terminal size={12} />
+                  {match[1]}
+                </span>
+              </div>
+
+              <SyntaxHighlighter
+                style={atomDark}
+                language={match[1]}
+                PreTag="div"
+                customStyle={{
+                  margin: 0,
+                  padding: "1rem",
+                  fontSize: "0.85rem",
+                  background: "#020617",
+                }}
+                {...props}
+              >
+                {String(children).replace(/\n$/, "")}
+              </SyntaxHighlighter>
+            </div>
+          ) : (
+            <code
+              className="bg-blue-500/10 text-blue-400 px-1.5 py-0.5 rounded border border-blue-500/20 text-xs"
+              {...props}
+            >
+              {children}
+            </code>
+          );
+        },
+      }}
+    >
+      {formatText(content)}
+    </ReactMarkdown>
+  );
+
   return (
-    <motion.div 
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.5 }}
-      className="flex flex-col h-full"
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex flex-col h-full space-y-5"
     >
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <div className="bg-green-500/20 p-1 rounded-md">
-            <CheckCircle2 size={16} className="text-green-400" />
-          </div>
-          <span className="font-bold uppercase tracking-widest text-[10px] text-slate-300">
-            Analysis Complete
-          </span>
+      <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+        
+        <div className="flex items-center gap-2 text-green-400">
+          <CheckCircle2 size={18} />
+          <h2 className="text-sm font-bold uppercase tracking-wider">
+            Diagnostic Report
+          </h2>
         </div>
-        <button 
+
+        <button
           onClick={copyToClipboard}
-          className="flex items-center gap-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 py-1.5 px-3 rounded-lg transition-all border border-slate-700 active:scale-95"
+          className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 transition-all duration-300 border border-slate-700 px-3 py-2 rounded-lg text-xs text-slate-300"
         >
           <Copy size={14} />
-          Copy Fix
+          Copy Report
         </button>
       </div>
 
-      {/* Content Area */}
-      <div className="flex-grow bg-slate-950/40 rounded-xl border border-slate-800/50 p-5 overflow-y-auto max-h-[550px] custom-scrollbar shadow-inner">
-        <div className="prose prose-invert prose-sm max-w-none">
-          <ReactMarkdown 
-            components={{
-              // Multi-line code blocks with Syntax Highlighting
-              code({ node, inline, className, children, ...props }) {
-                const match = /language-(\w+)/.exec(className || '');
-                return !inline && match ? (
-                  <div className="relative my-4 rounded-lg overflow-hidden border border-slate-700 shadow-2xl">
-                    <div className="bg-slate-800 px-4 py-2 flex justify-between items-center border-b border-slate-700">
-                      <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                        <Terminal size={12} /> {match[1]}
-                      </span>
-                    </div>
-                    <SyntaxHighlighter
-                      style={atomDark}
-                      language={match[1]}
-                      PreTag="div"
-                      customStyle={{
-                        margin: 0,
-                        padding: '1.5rem',
-                        fontSize: '0.85rem',
-                        background: '#0a0a0a',
-                      }}
-                      {...props}
-                    >
-                      {String(children).replace(/\n$/, '')}
-                    </SyntaxHighlighter>
-                  </div>
-                ) : (
-                  <code className="bg-blue-500/10 text-blue-400 px-1.5 py-0.5 rounded font-mono text-xs border border-blue-500/20" {...props}>
-                    {children}
-                  </code>
-                );
-              }
-            }}
-          >
-            {result.analysis}
-          </ReactMarkdown>
-        </div>
-      </div>
+      {/* Scrollable Content */}
+      <div className="space-y-5 overflow-y-auto max-h-[700px] pr-2 custom-scrollbar">
 
-      {/* Footer Info */}
-      <div className="mt-4 p-3 bg-blue-500/5 rounded-lg border border-blue-500/10 flex items-center gap-3">
-        <div className="text-blue-400 animate-pulse">
-            <Sparkles size={14} />
-        </div>
-        <span className="text-[11px] text-slate-400 leading-relaxed">
-          AI Agent has analyzed the traceback. Ensure you have the right permissions before running the suggested commands.
-        </span>
+        {/* Root Cause */}
+        {parsedResult.analysis && (
+          <section className="bg-slate-900/50 border border-slate-800 rounded-2xl p-5">
+
+            <div className="flex items-center gap-2 mb-4 text-cyan-400">
+              <Activity size={16} />
+              <h3 className="text-xs uppercase tracking-widest font-bold">
+                Root Cause Analysis
+              </h3>
+            </div>
+
+            <div className="prose prose-invert prose-sm max-w-none text-slate-300 leading-relaxed">
+              <MarkdownComponent content={parsedResult.analysis} />
+            </div>
+          </section>
+        )}
+
+        {/* Recommended Fix */}
+        {parsedResult.fix && (
+          <section className="bg-slate-900/50 border border-slate-800 rounded-2xl p-5">
+
+            <div className="flex items-center gap-2 mb-4 text-emerald-400">
+              <Wrench size={16} />
+              <h3 className="text-xs uppercase tracking-widest font-bold">
+                Recommended Fix
+              </h3>
+            </div>
+
+            <div className="space-y-5">
+
+              {/* Windows */}
+              <div className="bg-slate-950/50 border border-slate-800 rounded-xl p-4">
+                
+                <div className="flex items-center gap-2 mb-3 text-blue-400">
+                  <Monitor size={15} />
+                  <h4 className="font-semibold text-sm">
+                    Windows Fix
+                  </h4>
+                </div>
+
+                <div className="prose prose-invert prose-sm max-w-none text-slate-300">
+                  <MarkdownComponent content={parsedResult.fix} />
+                </div>
+              </div>
+
+              {/* Linux */}
+              <div className="bg-slate-950/50 border border-slate-800 rounded-xl p-4">
+                
+                <div className="flex items-center gap-2 mb-3 text-orange-400">
+                  <Terminal size={15} />
+                  <h4 className="font-semibold text-sm">
+                    Linux/macOS Fix
+                  </h4>
+                </div>
+
+                <div className="prose prose-invert prose-sm max-w-none text-slate-300">
+                  <MarkdownComponent content={parsedResult.fix} />
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Validation */}
+        {parsedResult.validation && (
+          <section className="bg-slate-900/50 border border-slate-800 rounded-2xl p-5">
+
+            <div className="flex items-center gap-2 mb-4 text-amber-400">
+              <ShieldCheck size={16} />
+              <h3 className="text-xs uppercase tracking-widest font-bold">
+                Risk & Validation
+              </h3>
+            </div>
+
+            <div className="prose prose-invert prose-sm max-w-none text-slate-300 leading-relaxed">
+              <MarkdownComponent content={parsedResult.validation} />
+            </div>
+          </section>
+        )}
+
+        {/* Terminal Command */}
+        {parsedResult.auto_fix && (
+          <section className="bg-blue-500/5 border border-blue-500/20 rounded-2xl p-5">
+
+            <div className="flex items-center gap-2 mb-4 text-blue-400">
+              <Zap size={16} />
+              <h3 className="text-xs uppercase tracking-widest font-bold">
+                Terminal Command
+              </h3>
+            </div>
+
+            <MarkdownComponent
+              content={`\`\`\`bash\n${parsedResult.auto_fix}\n\`\`\``}
+            />
+          </section>
+        )}
       </div>
     </motion.div>
   );

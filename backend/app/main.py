@@ -4,7 +4,7 @@ from app.routes.analyze import router as analyze_router
 
 app = FastAPI()
 
-# ✅ CORS middleware (IMPORTANT 🔥)
+#  CORS middleware 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # dev ke liye ok

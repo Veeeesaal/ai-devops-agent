@@ -1,10 +1,50 @@
-# Backend
-backend/myenv/
-backend/app/__pycache__/
-backend/.env
+# =========================
+# Python / Backend
+# =========================
 
+backend/myenv/
+backend/venv/
+
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+backend/.env
+.env
+
+
+# =========================
 # Frontend
+# =========================
+
 frontend/node_modules/
 
-# General
-*.pyc
+
+# =========================
+# Logs
+# =========================
+
+*.log
+
+
+# =========================
+# Docker
+# =========================
+
+.dockerignore
+
+
+# =========================
+# OS Files
+# =========================
+
+.DS_Store
+Thumbs.db
+
+
+# =========================
+# VS Code
+# =========================
+
+.vscode/
