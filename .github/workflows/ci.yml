@@ -23,6 +23,6 @@ jobs:
         run: |
           pip install -r backend/requirements.txt
 
-      - name: Check Backend Syntax
+      - name: Run Failure Test
         run: |
-          python -m py_compile backend/app/main.py
+          python backend/test_fail.py
